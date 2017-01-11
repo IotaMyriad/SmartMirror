@@ -29,11 +29,9 @@ class MirrorWidget():
 
         def loadInstalledWidgets(self):
             for subclass in CollapsedWidget.__subclasses__():
-                print (subclass)
                 self.installedCollapsedWidgets[subclass.name()] = subclass
 
             for subclass in ExpandedWidget.__subclasses__():
-                print (subclass)
                 self.installedExpandedWidgets[subclass.name()] = subclass
 
         def initActiveCollapsedWidgets(self, collapsedWidgetConf):
