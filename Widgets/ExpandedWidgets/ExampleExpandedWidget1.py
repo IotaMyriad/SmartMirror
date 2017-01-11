@@ -2,7 +2,7 @@
 
 from PyQt5.QtWidgets import *
 
-from Widgets.ExpandedWidgets.ExpandedWidget import ExpandedWidget
+from Widgets.ExpandedWidget import ExpandedWidget
 
 
 class ExampleExpandedWidget1(ExpandedWidget):

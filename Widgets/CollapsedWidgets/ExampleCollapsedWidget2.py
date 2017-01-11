@@ -2,7 +2,7 @@
 
 from PyQt5.QtWidgets import *
 
-from Widgets.CollapsedWidgets.CollapsedWidget import CollapsedWidget
+from Widgets.CollapsedWidget import CollapsedWidget
 
 
 class ExampleCollapsedWidget2(CollapsedWidget):

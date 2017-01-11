@@ -8,8 +8,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 
-from Widgets.CollapsedWidgets.CollapsedWidget import CollapsedWidget
-from Widgets.ExpandedWidgets.ExpandedWidget import ExpandedWidget
+from Widgets.CollapsedWidget import CollapsedWidget
+from Widgets.ExpandedWidget import ExpandedWidget
 
 
 class MirrorWidget():
@@ -113,8 +113,7 @@ def importCollapsedWidgetModules():
     modulePath = os.path.join(currDir, 'Widgets', 'CollapsedWidgets')
     for f in os.listdir(modulePath):
         if os.path.isfile(os.path.join(modulePath, f)) \
-            and f != '__init__.py' and f != 'CollapsedWidget.py' \
-            and os.path.splitext(f)[1] == '.py':
+            and f != '__init__.py' and os.path.splitext(f)[1] == '.py':
             importlib.import_module(modulePackagePath
                 + str(os.path.splitext(f)[0]))
 
@@ -125,8 +124,7 @@ def importExpandedWidgetModules():
     modulePath = os.path.join(currDir, 'Widgets', 'ExpandedWidgets')
     for f in os.listdir(modulePath):
         if os.path.isfile(os.path.join(modulePath, f)) \
-            and f != '__init__.py' and f != 'ExpandedWidget.py' \
-            and os.path.splitext(f)[1] == '.py':
+            and f != '__init__.py' and os.path.splitext(f)[1] == '.py':
             importlib.import_module(modulePackagePath
                 + str(os.path.splitext(f)[0]))
 
