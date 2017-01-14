@@ -7,11 +7,15 @@ import importlib
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-
+# Importing the widget base classes
 from Widgets.CollapsedWidget import CollapsedWidget
 from Widgets.ExpandedWidget import ExpandedWidget
 
 
+'''
+Singleton class for the Mirror Widget. This is the main widget that displays
+all of the other widgets.
+'''
 class MirrorWidget():
     class __MirrorWidget(QWidget):
         def __init__(self, app, collapsedWidgetConf):
@@ -27,6 +31,9 @@ class MirrorWidget():
             self.initActiveExpandedWidget()
             self.initUI(app)
 
+        '''
+        Maps widget name to the widget class.
+        '''
         def loadInstalledWidgets(self):
             for subclass in CollapsedWidget.__subclasses__():
                 self.installedCollapsedWidgets[subclass.name()] = subclass
@@ -34,6 +41,9 @@ class MirrorWidget():
             for subclass in ExpandedWidget.__subclasses__():
                 self.installedExpandedWidgets[subclass.name()] = subclass
 
+        '''
+        Initializes the collapsed widgets selected by the user to be displayed.
+        '''
         def initActiveCollapsedWidgets(self, collapsedWidgetConf):
             # Initializing the top widget
             if collapsedWidgetConf['top'] in self.installedCollapsedWidgets:
@@ -57,17 +67,22 @@ class MirrorWidget():
             if collapsedWidgetConf['right'] in self.installedCollapsedWidgets:
                 self.activeCollapsedWidgets['right'] = \
                     self.installedCollapsedWidgets[collapsedWidgetConf['right']]()
-
             else:
                 placeholderWidget = QWidget()
                 placeholderWidget.setStyleSheet("background-color:black;}")
                 self.activeCollapsedWidgets['right'] = placeholderWidget
 
+        '''
+        Initializes the expanded widget as a placeholder.
+        '''
         def initActiveExpandedWidget(self):
             placeholderWidget = QWidget()
             placeholderWidget.setStyleSheet("background-color:black;}")
             self.activeExpandedWidget = placeholderWidget
 
+        '''
+        Draws the initial GUI for the collapsed and expanded widgets.
+        '''
         def initUI(self, app):
             grid = QGridLayout()
 
@@ -96,8 +111,7 @@ class MirrorWidget():
 def main():
     app = QApplication(sys.argv)
 
-    importCollapsedWidgetModules()
-    importExpandedWidgetModules()
+    importInstalledWidgetModules()
 
     collapsedWidgetConf = json.load(open("CollapsedWidgetConf.json"))
     widget = MirrorWidget(app, collapsedWidgetConf)
@@ -106,28 +120,29 @@ def main():
 
     sys.exit(app.exec_())
 
+'''
+Imports all installed widgets so that they are visible to the main application.
+'''
+def importInstalledWidgetModules():
+    # Package path to the installed widgets
+    packagePath = 'Widgets.InstalledWidgets.'
 
-def importCollapsedWidgetModules():
-    modulePackagePath = 'Widgets.CollapsedWidgets.'
     currDir = os.path.dirname(__file__)
-    modulePath = os.path.join(currDir, 'Widgets', 'CollapsedWidgets')
-    for f in os.listdir(modulePath):
-        if os.path.isfile(os.path.join(modulePath, f)) \
-            and f != '__init__.py' and os.path.splitext(f)[1] == '.py':
-            importlib.import_module(modulePackagePath
-                + str(os.path.splitext(f)[0]))
+    # File path to the installed widgets
+    path = os.path.join(currDir, 'Widgets', 'InstalledWidgets')
 
-
-def importExpandedWidgetModules():
-    modulePackagePath = 'Widgets.ExpandedWidgets.'
-    currDir = os.path.dirname(__file__)
-    modulePath = os.path.join(currDir, 'Widgets', 'ExpandedWidgets')
-    for f in os.listdir(modulePath):
-        if os.path.isfile(os.path.join(modulePath, f)) \
-            and f != '__init__.py' and os.path.splitext(f)[1] == '.py':
-            importlib.import_module(modulePackagePath
-                + str(os.path.splitext(f)[0]))
-
+    for fname in os.listdir(path):
+        # Find all of the individual widget directories
+        if os.path.isdir(os.path.join(path, fname)) and fname != '__pycache__':
+            widgetPackagePath = packagePath + fname + "."
+            widgetPath = os.path.join(path, fname)
+            for widgetFile in os.listdir(widgetPath):
+                # Import all of the modules needed for the widget
+                if os.path.isfile(os.path.join(widgetPath, widgetFile)) \
+                    and widgetFile != '__init__.py' and \
+                    os.path.splitext(widgetFile)[1] == '.py':
+                    importlib.import_module(widgetPackagePath
+                    + str(os.path.splitext(widgetFile)[0]))
 
 if __name__ == '__main__':
     main()

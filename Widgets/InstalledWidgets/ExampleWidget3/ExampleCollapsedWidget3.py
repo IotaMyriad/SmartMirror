@@ -2,13 +2,13 @@
 
 from PyQt5.QtWidgets import *
 
-from Widgets.ExpandedWidget import ExpandedWidget
+from Widgets.CollapsedWidget import CollapsedWidget
 
 
-class ExampleExpandedWidget4(ExpandedWidget):
+class ExampleCollapsedWidget3(CollapsedWidget):
 
     def __init__(self):
-        super(ExampleExpandedWidget4, self).__init__()
+        super(ExampleCollapsedWidget3, self).__init__()
         self.initUI()
 
     def initUI(self):
@@ -20,4 +20,4 @@ class ExampleExpandedWidget4(ExpandedWidget):
 
     @staticmethod
     def name():
-        return "ExampleWidget4"
+        return "ExampleWidget3"

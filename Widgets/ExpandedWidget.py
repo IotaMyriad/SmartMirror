@@ -18,7 +18,11 @@ class ExpandedWidget(QWidget, metaclass=ExpandedWidgetMeta):
     @staticmethod
     @abstractmethod
     def name(self) -> str:
-        '''Return the name of the widget'''
+        '''
+        Return the name of the widget
+        !!! IMPORTANT: The name that is returned must match the one in
+                       WidgetConf.json !!!"
+        '''
 
 
 

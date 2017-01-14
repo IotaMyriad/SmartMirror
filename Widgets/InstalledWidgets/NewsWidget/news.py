@@ -11,7 +11,7 @@ class NewsWidget(CollapsedWidget):
     def __init__(self):
         super(NewsWidget, self).__init__()
         headlines = self.getNewsHeadlines()
-        self.initUI(headlines)    
+        self.initUI(headlines)
 
     def getNewsHeadlines(self):
         headlines = []
@@ -33,7 +33,7 @@ class NewsWidget(CollapsedWidget):
         for hl in headlines:
             print(hl)
 
-        print(len(headlines))        
+        print(len(headlines))
 
         table = QTableWidget(self)
         table.setColumnCount(1)
@@ -46,7 +46,7 @@ class NewsWidget(CollapsedWidget):
             table.setItem(rowPosition,0, QTableWidgetItem(headline))
             #table.setColumnWidth(rowPosition, 1000)
         table.resizeColumnsToContents()
-        self.show()    
+        self.show()
 
     @staticmethod
     def name():
