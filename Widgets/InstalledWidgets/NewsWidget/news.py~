@@ -15,9 +15,9 @@ class NewsWidget(CollapsedWidget):
 
     def getNewsHeadlines(self):
         headlines = []
-        #newsUrl = "http://hosted2.ap.org/atom/APDEFAULT/3d281c11a76b4ad082fe88aa0db04909"
+        newsUrl = "http://hosted2.ap.org/atom/APDEFAULT/3d281c11a76b4ad082fe88aa0db04909"
         #newsUrl = "http://news.google.com/?output=rss"
-        newsUrl = "http://news.yahoo.com/rss/"
+        #newsUrl = "http://news.yahoo.com/rss/"
         #newsUrl = "http://www.cbn.com/cbnnews/us/feed/"
 
         newsFeed = feedparser.parse(newsUrl)
