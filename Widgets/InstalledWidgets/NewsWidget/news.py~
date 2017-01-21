@@ -1,42 +1,67 @@
 import random
 import sys
 import feedparser
+import TextTeaser
+from newspaper import Article
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+
+"""
+installing feedparser: 
+-sudo pip3 install feedparser
+
+installing newspaper: 
+-go to this website: https://pypi.python.org/pypi/newspaper3k/0.1.9
+-download the .tar.gz
+-unpack it
+-go to the unpacked folder in terminal
+-sudo pip3 install -r requirements.txt
+-sudo python3 setup.py install
+
+for the document: we switched from google news to yahoo news
+-still fulfills criteria, easier to parse (only parsing yahoo website, not all of them, parsing all website is outside the scope of the project), better end user experience, less random text / missing text
+"""
 
 from Widgets.CollapsedWidget import CollapsedWidget
 
 class NewsWidget(CollapsedWidget):
 
+    Headlines = []
+    Links = []
+    Articles = []
+
     def __init__(self):
         super(NewsWidget, self).__init__()
-        headlines = self.getNewsHeadlines()
-        self.initUI(headlines)
+        self.getHeadlinesAndLinks()
+        self.getArticles()
+        self.initializeUI()
 
-    def getNewsHeadlines(self):
-        headlines = []
+    def getHeadlinesAndLinks(self):
+        newsUrl = "http://news.yahoo.com/rss/"
         #newsUrl = "http://hosted2.ap.org/atom/APDEFAULT/3d281c11a76b4ad082fe88aa0db04909"
-        newsUrl = "http://news.google.com/?output=rss"
-        #newsUrl = "http://news.yahoo.com/rss/"
+        #newsUrl = "http://news.google.com/?output=rss"
         #newsUrl = "http://www.cbn.com/cbnnews/us/feed/"
 
         newsFeed = feedparser.parse(newsUrl)
+        newsStories = newsFeed['items']
+        
         for counter in range(4):
-            headlines.append(newsFeed['items'][counter]['title'])
+            newsStory = newsStories[counter]
+            self.Headlines.append(newsStory['title'])
+            self.Links.append(newsStory['link'])
 
-        #for newsitem in newsFeed['items']:
-            #headlines.append(newsitem['title'])
-            #if len(headlines) == 4:
-                #break
+        return
 
-        return headlines
+    def getArticles(self):
+        for url in self.Links:
+            article = Article(url)
+            article.download()
+            article.parse()
+            self.Articles.append(article)
 
-    def initUI(self, headlines):
+        return 
 
-        for hl in headlines:
-            print(hl)
-
-        print(len(headlines))
+    def initializeUI(self):
 
         table = QTableWidget(self)
         table.setGeometry(100, 50, 300, 300)
@@ -46,7 +71,7 @@ class NewsWidget(CollapsedWidget):
         table.horizontalHeader().setVisible(False)
         table.setStyleSheet("border: 0px")
 
-        for headline in headlines:
+        for headline in self.Headlines:
             rowPosition = table.rowCount()
             table.insertRow(rowPosition)
             table.setItem(rowPosition,0, QTableWidgetItem(headline))
