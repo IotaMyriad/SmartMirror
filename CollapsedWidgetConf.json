@@ -1,5 +1,5 @@
 {
-    "left" : "CalendarWidget",
-    "top" : "NewsWidget",
-    "right" : "ExampleWidget3"
+    "left" : "ExampleWidget3",
+    "top" : "CalendarWidget",
+    "right" : "ExampleWidget2"
 }

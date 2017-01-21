@@ -24,13 +24,26 @@ class MirrorWidget():
             self.installedCollapsedWidgets = {}
             self.installedExpandedWidgets = {}
             self.activeCollapsedWidgets = {}
-            self.activeExpandedWidget = None
+            self.activeExpandedWidgets = {}
 
+            self.displayedExpandedWidgetOwner = None
+            self.displayedExpandedWidget = None
+
+            self.placeholderExpandedWidget = QWidget()
+            self.placeholderExpandedWidget.setStyleSheet("background-color:black;}");
+
+            self.grid = QGridLayout()
             self.loadInstalledWidgets()
             self.initActiveCollapsedWidgets(collapsedWidgetConf)
             self.initActiveExpandedWidget()
             self.initUI(app)
 
+            ''' TODO: This is just a workaround so that the main application
+                      gets all the keyboard events. Need to figure out how to
+                      capture events of child events.
+            '''
+            self.setFocusPolicy(Qt.StrongFocus)
+            self.setFocus()
         '''
         Maps widget name to the widget class.
         '''
@@ -54,6 +67,13 @@ class MirrorWidget():
                 placeholderWidget.setStyleSheet("background-color:black;}")
                 self.activeCollapsedWidgets['top'] = placeholderWidget
 
+
+            if collapsedWidgetConf['top'] in self.installedExpandedWidgets:
+                self.activeExpandedWidgets['top'] = \
+                    self.installedExpandedWidgets[collapsedWidgetConf['top']]()
+            else:
+                self.activeExpandedWidgets['top'] = None
+
             # Initializing the left widget
             if collapsedWidgetConf['left'] in self.installedCollapsedWidgets:
                 self.activeCollapsedWidgets['left'] = \
@@ -62,6 +82,12 @@ class MirrorWidget():
                 placeholderWidget = QWidget()
                 placeholderWidget.setStyleSheet("background-color:black;}")
                 self.activeCollapsedWidgets['left'] = placeholderWidget
+
+            if collapsedWidgetConf['left'] in self.installedExpandedWidgets:
+                self.activeExpandedWidgets['left'] = \
+                    self.installedExpandedWidgets[collapsedWidgetConf['left']]()
+            else:
+                self.activeExpandedWidgets['left'] = None
 
             # Initializing the right widget
             if collapsedWidgetConf['right'] in self.installedCollapsedWidgets:
@@ -72,29 +98,72 @@ class MirrorWidget():
                 placeholderWidget.setStyleSheet("background-color:black;}")
                 self.activeCollapsedWidgets['right'] = placeholderWidget
 
+            if collapsedWidgetConf['right'] in self.installedExpandedWidgets:
+                self.activeExpandedWidgets['right'] = \
+                    self.installedExpandedWidgets[collapsedWidgetConf['right']]()
+            else:
+                self.activeExpandedWidgets['right'] = None
+
         '''
         Initializes the expanded widget as a placeholder.
         '''
         def initActiveExpandedWidget(self):
-            placeholderWidget = QWidget()
-            placeholderWidget.setStyleSheet("background-color:black;}")
-            self.activeExpandedWidget = placeholderWidget
+            self.displayedExpandedWidget = self.placeholderExpandedWidget
 
         '''
         Draws the initial GUI for the collapsed and expanded widgets.
         '''
         def initUI(self, app):
-            grid = QGridLayout()
+            self.grid.addWidget(self.activeCollapsedWidgets['top'], 0, 30, 30, 90)
+            self.grid.addWidget(self.activeCollapsedWidgets['left'], 0, 0, 130, 30)
+            self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+            self.grid.addWidget(self.activeCollapsedWidgets['right'], 0, 120, 130, 30)
 
-            grid.addWidget(self.activeCollapsedWidgets['top'], 0, 30, 30, 90)
-            grid.addWidget(self.activeCollapsedWidgets['left'], 0, 0, 130, 30)
-            grid.addWidget(self.activeExpandedWidget, 30, 30, 100, 90)
-            grid.addWidget(self.activeCollapsedWidgets['right'], 0, 120, 130, 30)
-
+            self.activeCollapsedWidgets['top'].setFocusPolicy(Qt.NoFocus)
             geometry = app.desktop().availableGeometry()
-            self.setLayout(grid)
+            self.setLayout(self.grid)
             self.setStyleSheet("background-color:black;}")
             self.setGeometry(geometry)
+
+        def keyPressEvent(self, e):
+            # Check if we can display an expanded widget
+            if not self.displayedExpandedWidgetOwner:
+                if e.key() == Qt.Key_D:
+                    self.displayedExpandedWidgetOwner = 'left'
+                elif e.key() == Qt.Key_S:
+                    self.displayedExpandedWidgetOwner = 'top'
+                elif e.key() == Qt.Key_A:
+                    self.displayedExpandedWidgetOwner = 'right'
+
+                # If the user has performed an accepted interaction and an expanded view exists for the widget
+                if self.displayedExpandedWidgetOwner and \
+                    self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]:
+                    # Remove the placeholder
+                    self.grid.removeWidget(self.displayedExpandedWidget)
+                    self.displayedExpandedWidget.setParent(None)
+                    self.displayedExpandedWidget = self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]
+                    self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+                # Reset displayedExpandedWidgetOwner if user performs illegal action or no expanded view exists
+                else:
+                    self.displayedExpandedWidgetOwner = None
+            # Check if we can close the expanded widget
+            else:
+                if (e.key() == Qt.Key_D and self.displayedExpandedWidgetOwner == 'right') \
+                    or (e.key() == Qt.Key_W and self.displayedExpandedWidgetOwner == 'top') \
+                    or (e.key() == Qt.Key_A and self.displayedExpandedWidgetOwner == 'left'):
+                    self.grid.removeWidget(self.displayedExpandedWidget)
+                    self.displayedExpandedWidget.setParent(None)
+                    self.displayedExpandedWidget = self.placeholderExpandedWidget
+                    self.displayedExpandedWidgetOwner = None
+                    self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+
+
+        def eventFilter(self, object, event):
+            if event.type() == QEvent.KeyPress:
+                print ("HERE")
+                return True
+            return QWidget.eventFilter(self, obj, event)
+
 
     instance = None
     def __init__(self, app, collapsedWidgetConf):
@@ -116,7 +185,7 @@ def main():
     collapsedWidgetConf = json.load(open("CollapsedWidgetConf.json"))
     widget = MirrorWidget(app, collapsedWidgetConf)
     widget.show()
-    #mainWidget.showFullScreen()
+    #widget.showFullScreen()
 
     sys.exit(app.exec_())
 
