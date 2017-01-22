@@ -18,7 +18,7 @@ all of the other widgets.
 '''
 class MirrorWidget():
     class __MirrorWidget(QWidget):
-        def __init__(self, app, collapsedWidgetConf, expandedWidgetConf):
+        def __init__(self, app, collapsedWidgetConf):
             super(MirrorWidget.__MirrorWidget, self).__init__()
 
             self.installedCollapsedWidgets = {}
@@ -35,7 +35,7 @@ class MirrorWidget():
             self.grid = QGridLayout()
             self.loadInstalledWidgets()
             self.initActiveCollapsedWidgets(collapsedWidgetConf)
-            self.initActiveExpandedWidget(expandedWidgetConf)
+            self.initActiveExpandedWidget()
             self.initUI(app)
 
             ''' TODO: This is just a workaround so that the main application
@@ -52,7 +52,7 @@ class MirrorWidget():
                 self.installedCollapsedWidgets[subclass.name()] = subclass
 
             for subclass in ExpandedWidget.__subclasses__():
-                self.installedExpandedWidgets[subclass.name()] = subclass    
+                self.installedExpandedWidgets[subclass.name()] = subclass
 
         '''
         Initializes the collapsed widgets selected by the user to be displayed.
@@ -107,7 +107,6 @@ class MirrorWidget():
         '''
         Initializes the expanded widget as a placeholder.
         '''
-
         def initActiveExpandedWidget(self):
             self.displayedExpandedWidget = self.placeholderExpandedWidget
 
@@ -167,10 +166,10 @@ class MirrorWidget():
 
 
     instance = None
-    def __init__(self, app, collapsedWidgetConf, expandedWidgetConf):
+    def __init__(self, app, collapsedWidgetConf):
         if not MirrorWidget.instance:
             MirrorWidget.instance = \
-                MirrorWidget.__MirrorWidget(app, collapsedWidgetConf, expandedWidgetConf)
+                MirrorWidget.__MirrorWidget(app, collapsedWidgetConf)
         else:
             pass
 
@@ -184,8 +183,7 @@ def main():
     importInstalledWidgetModules()
 
     collapsedWidgetConf = json.load(open("CollapsedWidgetConf.json"))
-    expandedWidgetConf = json.load(open("ExpandedWidgetConf.json"))
-    widget = MirrorWidget(app, collapsedWidgetConf, expandedWidgetConf)
+    widget = MirrorWidget(app, collapsedWidgetConf)
     widget.show()
     #widget.showFullScreen()
 
