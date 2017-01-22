@@ -1,16 +1,15 @@
 import random
 import sys
 import feedparser
-import TextTeaser
 from newspaper import Article
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 """
-installing feedparser: 
+installing feedparser:
 -sudo pip3 install feedparser
 
-installing newspaper: 
+installing newspaper:
 -go to this website: https://pypi.python.org/pypi/newspaper3k/0.1.9
 -download the .tar.gz
 -unpack it
@@ -44,7 +43,7 @@ class NewsWidget(CollapsedWidget):
 
         newsFeed = feedparser.parse(newsUrl)
         newsStories = newsFeed['items']
-        
+
         for counter in range(4):
             newsStory = newsStories[counter]
             self.Headlines.append(newsStory['title'])
@@ -59,7 +58,7 @@ class NewsWidget(CollapsedWidget):
             article.parse()
             self.Articles.append(article)
 
-        return 
+        return
 
     def initializeUI(self):
 
