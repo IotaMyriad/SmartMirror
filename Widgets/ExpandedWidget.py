@@ -15,6 +15,9 @@ class ExpandedWidget(QWidget, metaclass=ExpandedWidgetMeta):
     def __init__(self):
         super(ExpandedWidget, self).__init__()
 
+    def keyPressUsed(self, e) -> bool:
+        return False
+
     @staticmethod
     @abstractmethod
     def name(self) -> str:

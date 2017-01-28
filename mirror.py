@@ -143,9 +143,15 @@ class MirrorWidget():
                     self.displayedExpandedWidget.setParent(None)
                     self.displayedExpandedWidget = self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]
                     self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+
                 # Reset displayedExpandedWidgetOwner if user performs illegal action or no expanded view exists
                 else:
                     self.displayedExpandedWidgetOwner = None
+
+            # Check if the expanded widget can use the event
+            elif self.displayedExpandedWidgetOwner == 'top' and self.displayedExpandedWidget.keyPressUsed(e):
+                pass
+
             # Check if we can close the expanded widget
             else:
                 if (e.key() == Qt.Key_D and self.displayedExpandedWidgetOwner == 'right') \
