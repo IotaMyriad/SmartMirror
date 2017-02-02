@@ -4,6 +4,15 @@ import json
 import os
 import importlib
 
+import cv2
+#http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
+#used that to install opencv
+#I did not use virtualenvs, and instead changed a line when you cmake
+#-D PYTHON_EXECUTABLE=/usr/bin/python
+
+from time import sleep
+import threading
+
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
@@ -36,7 +45,9 @@ class MirrorWidget():
             self.loadInstalledWidgets()
             self.initActiveCollapsedWidgets(collapsedWidgetConf)
             self.initActiveExpandedWidget()
-            self.initUI(app)
+            self.initUI(app, collapsedWidgetConf)
+            
+            self.startFacialDetection()
 
             ''' TODO: This is just a workaround so that the main application
                       gets all the keyboard events. Need to figure out how to
@@ -113,17 +124,28 @@ class MirrorWidget():
         '''
         Draws the initial GUI for the collapsed and expanded widgets.
         '''
-        def initUI(self, app):
-            self.grid.addWidget(self.activeCollapsedWidgets['top'], 0, 30, 30, 90)
-            self.grid.addWidget(self.activeCollapsedWidgets['left'], 0, 0, 130, 30)
-            self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
-            self.grid.addWidget(self.activeCollapsedWidgets['right'], 0, 120, 130, 30)
+        def initUI(self, app, collapsedWidgetConf):
+            self.showWidgets()
 
             self.activeCollapsedWidgets['top'].setFocusPolicy(Qt.NoFocus)
             geometry = app.desktop().availableGeometry()
             self.setLayout(self.grid)
             self.setStyleSheet("background-color:black;}")
             self.setGeometry(geometry)
+
+        def showWidgets(self):
+            self.grid.addWidget(self.activeCollapsedWidgets['top'], 0, 30, 30, 90)
+            self.grid.addWidget(self.activeCollapsedWidgets['left'], 0, 0, 130, 30)
+            self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+            self.grid.addWidget(self.activeCollapsedWidgets['right'], 0, 120, 130, 30)
+
+        def hideWidgets(self): 
+            for position, widget in self.activeCollapsedWidgets.items():
+                self.grid.removeWidget(widget)
+                widget.setParent(None)
+
+            self.grid.removeWidget(self.displayedExpandedWidget)
+            self.displayedExpandedWidget.setParent(None)
 
         def keyPressEvent(self, e):
             # Check if we can display an expanded widget
@@ -170,6 +192,51 @@ class MirrorWidget():
                 return True
             return QWidget.eventFilter(self, obj, event)
 
+        def startFacialDetection(self):
+            thread = threading.Thread(target = self.facialDetection)
+            thread.daemon = True
+            thread.start()
+
+        def facialDetection(self):
+            #https://realpython.com/blog/python/face-detection-in-python-using-a-webcam/
+            #need to source code
+            faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+            video_capture = cv2.VideoCapture(0)
+
+            #use counter to have time delay for when someone leaves
+            faceTimeCounter = 5 
+            widgetsShowing = False
+
+            while True:
+                # Capture frame-by-frame
+                ret, frame = video_capture.read()
+
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                faces = faceCascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(30, 30),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+
+                if len(faces) == 0:
+                    if faceTimeCounter > 0:
+                        faceTimeCounter = faceTimeCounter - 1
+                else:
+                    if faceTimeCounter < 30:
+                        faceTimeCounter = faceTimeCounter + 1
+
+                print("faceTimeCounter: " + str(faceTimeCounter))
+                if faceTimeCounter > 0 and widgetsShowing == False:
+                    widgetsShowing = True
+                    self.showWidgets()
+                elif faceTimeCounter == 0 and widgetsShowing == True:
+                    widgetsShowing = False
+                    self.hideWidgets()
+
+                sleep(1)
 
     instance = None
     def __init__(self, app, collapsedWidgetConf):

@@ -44,7 +44,7 @@ class CalendarWidget(CollapsedWidget):
         self.timer.timeout.connect(self.displayOSDateTime)
         self.timer.start()
 
-        self.show()
+        #self.show()
 
     def Time(self):
         self.lcd.display(QTime.currentTime().toString())
