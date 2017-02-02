@@ -71,6 +71,7 @@ class ExpandedNewsWidget(ExpandedWidget):
 
     def initializeUI(self):
         self.text = QTextEdit(self)
+        self.text.setTextColor(Qt.white)
         self.text.setGeometry(25, 0, 1050, 750)
         self.text.setReadOnly(True)
         self.updateText()

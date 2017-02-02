@@ -64,17 +64,18 @@ class CollapsedNewsWidget(CollapsedWidget):
 
         table = QTableWidget(self)
 
-        table.setGeometry(325, 30, 500, 500)
+        table.setGeometry(325, 30, 500, 700)
         table.setColumnCount(1)
         table.verticalHeader().setVisible(False)
         table.horizontalHeader().setVisible(False)
-        table.setStyleSheet("border: 0px")
+        table.setStyleSheet("border: 0px; font-size: 16pt;")
 
         for headline in self.Headlines:
             rowPosition = table.rowCount()
             table.insertRow(rowPosition)
             item = QTableWidgetItem(headline)
             item.setTextAlignment(Qt.AlignHCenter)
+            item.setForeground(Qt.white)
             table.setItem(rowPosition,0, item)
         table.resizeColumnsToContents()
 
