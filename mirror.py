@@ -125,7 +125,10 @@ class MirrorWidget():
         Draws the initial GUI for the collapsed and expanded widgets.
         '''
         def initUI(self, app, collapsedWidgetConf):
-            self.showWidgets()
+            self.grid.addWidget(self.activeCollapsedWidgets['top'], 0, 30, 30, 90)
+            self.grid.addWidget(self.activeCollapsedWidgets['left'], 0, 0, 130, 30)
+            self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+            self.grid.addWidget(self.activeCollapsedWidgets['right'], 0, 120, 130, 30)
 
             self.activeCollapsedWidgets['top'].setFocusPolicy(Qt.NoFocus)
             geometry = app.desktop().availableGeometry()
@@ -134,18 +137,16 @@ class MirrorWidget():
             self.setGeometry(geometry)
 
         def showWidgets(self):
-            self.grid.addWidget(self.activeCollapsedWidgets['top'], 0, 30, 30, 90)
-            self.grid.addWidget(self.activeCollapsedWidgets['left'], 0, 0, 130, 30)
-            self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
-            self.grid.addWidget(self.activeCollapsedWidgets['right'], 0, 120, 130, 30)
+            for position, widget in self.activeCollapsedWidgets.items():
+                widget.show()
+
+            self.displayedExpandedWidget.show()
 
         def hideWidgets(self): 
             for position, widget in self.activeCollapsedWidgets.items():
-                self.grid.removeWidget(widget)
-                widget.setParent(None)
+                widget.hide()
 
-            self.grid.removeWidget(self.displayedExpandedWidget)
-            self.displayedExpandedWidget.setParent(None)
+            self.displayedExpandedWidget.hide()
 
         def keyPressEvent(self, e):
             # Check if we can display an expanded widget
