@@ -70,15 +70,25 @@ class ExpandedNewsWidget(ExpandedWidget):
             return None
 
     def initializeUI(self):
+        vbox = QVBoxLayout(self)
+
+        self.title = QLabel(self)
+        self.title.setStyleSheet("font-size: 16pt; color: white")
+        self.title.setFixedWidth(1085)
+        self.title.setAlignment(Qt.AlignHCenter)
+        vbox.addWidget(self.title)
+
         self.text = QTextEdit(self)
         self.text.setTextColor(Qt.white)
         self.text.setGeometry(25, 0, 1050, 750)
         self.text.setReadOnly(True)
         self.updateText()
 
+        vbox.addWidget(self.text)
+
     def updateText(self):
-        self.text.setPlainText(self.Headlines[self.ArticleCounter] + "\n\n\n" + \
-            self.Articles[self.ArticleCounter].text)
+        self.title.setText(self.Headlines[self.ArticleCounter])
+        self.text.setPlainText(self.Articles[self.ArticleCounter].text)
 
     def keyPressUsed(self, e) -> bool:
         if e.key() == Qt.Key_D and self.ArticleCounter < 3:
