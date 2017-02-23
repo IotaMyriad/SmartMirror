@@ -4,7 +4,7 @@ import json
 import os
 import importlib
 
-import cv2
+#import cv2
 #http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
 #used that to install opencv
 #I did not use virtualenvs, and instead changed a line when you cmake
@@ -46,8 +46,8 @@ class MirrorWidget():
             self.initActiveCollapsedWidgets(collapsedWidgetConf)
             self.initActiveExpandedWidget()
             self.initUI(app, collapsedWidgetConf)
-            
-            self.startFacialDetection()
+
+            #self.startFacialDetection()
 
             ''' TODO: This is just a workaround so that the main application
                       gets all the keyboard events. Need to figure out how to
@@ -142,7 +142,7 @@ class MirrorWidget():
 
             self.displayedExpandedWidget.show()
 
-        def hideWidgets(self): 
+        def hideWidgets(self):
             for position, widget in self.activeCollapsedWidgets.items():
                 widget.hide()
 
@@ -205,7 +205,7 @@ class MirrorWidget():
             video_capture = cv2.VideoCapture(0)
 
             #use counter to have time delay for when someone leaves
-            faceTimeCounter = 5 
+            faceTimeCounter = 5
             widgetsShowing = False
 
             while True:
