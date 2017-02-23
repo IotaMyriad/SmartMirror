@@ -18,6 +18,10 @@ class ExampleExpandedWidget1(ExpandedWidget):
         self.layout.addWidget(self.widget)
         self.setLayout(self.layout)
 
+    def receive_message(self, message):
+        print (message)
+
     @staticmethod
     def name():
         return "ExampleWidget1"
+
