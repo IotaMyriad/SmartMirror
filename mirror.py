@@ -3,8 +3,10 @@ import sys
 import json
 import os
 import importlib
+from inspect import signature
+from inspect import ismethod
 
-import cv2
+#import cv2
 #http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
 #used that to install opencv
 #I did not use virtualenvs, and instead changed a line when you cmake
@@ -34,7 +36,9 @@ class MirrorWidget():
             self.installedExpandedWidgets = {}
             self.activeCollapsedWidgets = {}
             self.activeExpandedWidgets = {}
-
+            self.activeExpandedWidgetsNames = set()
+            self.respondingExpandedWidgets = set()
+            
             self.displayedExpandedWidgetOwner = None
             self.displayedExpandedWidget = None
 
@@ -46,8 +50,8 @@ class MirrorWidget():
             self.initActiveCollapsedWidgets(collapsedWidgetConf)
             self.initActiveExpandedWidget()
             self.initUI(app, collapsedWidgetConf)
-            
-            self.startFacialDetection()
+
+            #self.startFacialDetection()
 
             ''' TODO: This is just a workaround so that the main application
                       gets all the keyboard events. Need to figure out how to
@@ -64,6 +68,9 @@ class MirrorWidget():
 
             for subclass in ExpandedWidget.__subclasses__():
                 self.installedExpandedWidgets[subclass.name()] = subclass
+                if 'receive_message' in dir(subclass):
+                    self.respondingExpandedWidgets.add(subclass.name())
+                    
 
         '''
         Initializes the collapsed widgets selected by the user to be displayed.
@@ -71,8 +78,13 @@ class MirrorWidget():
         def initActiveCollapsedWidgets(self, collapsedWidgetConf):
             # Initializing the top widget
             if collapsedWidgetConf['top'] in self.installedCollapsedWidgets:
-                self.activeCollapsedWidgets['top'] = \
-                    self.installedCollapsedWidgets[collapsedWidgetConf['top']]()
+                widget_class = self.installedCollapsedWidgets[collapsedWidgetConf['top']]
+                # If the widget indicates that it wants communication access
+                if 'msg_callback' in str(signature(widget_class.__init__)):
+                    widget = widget_class(msg_callback=self.widget_communication)
+                else:
+                    widget = widget_class()
+                self.activeCollapsedWidgets['top'] = widget
             else:
                 placeholderWidget = QWidget()
                 placeholderWidget.setStyleSheet("background-color:black;}")
@@ -80,6 +92,7 @@ class MirrorWidget():
 
 
             if collapsedWidgetConf['top'] in self.installedExpandedWidgets:
+                self.activeExpandedWidgetsNames.add(collapsedWidgetConf['top'])
                 self.activeExpandedWidgets['top'] = \
                     self.installedExpandedWidgets[collapsedWidgetConf['top']]()
             else:
@@ -87,14 +100,20 @@ class MirrorWidget():
 
             # Initializing the left widget
             if collapsedWidgetConf['left'] in self.installedCollapsedWidgets:
-                self.activeCollapsedWidgets['left'] = \
-                    self.installedCollapsedWidgets[collapsedWidgetConf['left']]()
+                widget_class = self.installedCollapsedWidgets[collapsedWidgetConf['left']]
+                # If the widget indicates that it wants communication access
+                if 'msg_callback' in str(signature(widget_class.__init__)):
+                    widget = widget_class(msg_callback=self.widget_communication)
+                else:
+                    widget = widget_class()
+                self.activeCollapsedWidgets['left'] = widget
             else:
                 placeholderWidget = QWidget()
                 placeholderWidget.setStyleSheet("background-color:black;}")
                 self.activeCollapsedWidgets['left'] = placeholderWidget
 
             if collapsedWidgetConf['left'] in self.installedExpandedWidgets:
+                self.activeExpandedWidgetsNames.add(collapsedWidgetConf['left'])
                 self.activeExpandedWidgets['left'] = \
                     self.installedExpandedWidgets[collapsedWidgetConf['left']]()
             else:
@@ -102,14 +121,20 @@ class MirrorWidget():
 
             # Initializing the right widget
             if collapsedWidgetConf['right'] in self.installedCollapsedWidgets:
-                self.activeCollapsedWidgets['right'] = \
-                    self.installedCollapsedWidgets[collapsedWidgetConf['right']]()
+                widget_class = self.installedCollapsedWidgets[collapsedWidgetConf['right']]
+                # If the widget indicates that it wants communication access
+                if 'msg_callback' in str(signature(widget_class.__init__)):
+                    widget = widget_class(msg_callback=self.widget_communication)
+                else:
+                    widget = widget_class()
+                self.activeCollapsedWidgets['right'] = widget
             else:
                 placeholderWidget = QWidget()
                 placeholderWidget.setStyleSheet("background-color:black;}")
                 self.activeCollapsedWidgets['right'] = placeholderWidget
 
             if collapsedWidgetConf['right'] in self.installedExpandedWidgets:
+                self.activeExpandedWidgetsNames.add(collapsedWidgetConf['right'])
                 self.activeExpandedWidgets['right'] = \
                     self.installedExpandedWidgets[collapsedWidgetConf['right']]()
             else:
@@ -142,12 +167,29 @@ class MirrorWidget():
 
             self.displayedExpandedWidget.show()
 
-        def hideWidgets(self): 
+        def hideWidgets(self):
             for position, widget in self.activeCollapsedWidgets.items():
                 widget.hide()
 
             self.displayedExpandedWidget.hide()
 
+        def widget_communication(self, **kwargs):
+            widget_name, message = None, None
+            for key, value in kwargs.items():
+                if key == 'widget_name':
+                    widget_name = value
+                elif key == 'message':
+                    message = value
+
+            # Check if expanded widget exists
+            if not widget_name or widget_name not in self.respondingExpandedWidgets \
+               or widget_name not in list(self.activeExpandedWidgetsNames):
+                return False
+
+            # Deliver the message
+            self.activeExpandedWidgets[widget_name].receive_message(message)
+            return True
+        
         def keyPressEvent(self, e):
             # Check if we can display an expanded widget
             if not self.displayedExpandedWidgetOwner:
@@ -205,7 +247,7 @@ class MirrorWidget():
             video_capture = cv2.VideoCapture(0)
 
             #use counter to have time delay for when someone leaves
-            faceTimeCounter = 5 
+            faceTimeCounter = 5
             widgetsShowing = False
 
             while True:
