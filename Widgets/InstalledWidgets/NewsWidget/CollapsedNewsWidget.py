@@ -64,7 +64,8 @@ class CollapsedNewsWidget(CollapsedWidget):
 
         table = QTableWidget(self)
 
-        table.setGeometry(325, 30, 500, 700)
+        table.setGeometry(25, 30, 1000, self.height())
+
         table.setColumnCount(1)
         table.verticalHeader().setVisible(False)
         table.horizontalHeader().setVisible(False)
@@ -77,7 +78,7 @@ class CollapsedNewsWidget(CollapsedWidget):
             item.setTextAlignment(Qt.AlignHCenter)
             item.setForeground(Qt.white)
             table.setItem(rowPosition,0, item)
-        table.resizeColumnsToContents()
+            table.setColumnWidth(rowPosition, 1000)
 
     @staticmethod
     def name():

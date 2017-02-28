@@ -100,10 +100,12 @@ class ExpandedNewsWidget(ExpandedWidget):
             self.updateText()
             return True
         elif e.key() == Qt.Key_S:
-            self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
+            currentValue = self.text.verticalScrollBar().value()
+            self.text.verticalScrollBar().setValue(currentValue + self.text.verticalScrollBar().pageStep())
             return True    
         elif e.key() == Qt.Key_W and self.text.verticalScrollBar().value() != 0:
-            self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().minimum())
+            currentValue = self.text.verticalScrollBar().value()
+            self.text.verticalScrollBar().setValue(currentValue - self.text.verticalScrollBar().pageStep())
             return True    
         else:
             return False
