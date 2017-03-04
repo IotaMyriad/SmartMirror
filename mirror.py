@@ -174,21 +174,30 @@ class MirrorWidget():
             self.displayedExpandedWidget.hide()
 
         def widget_communication(self, **kwargs):
-            widget_name, message = None, None
+            widget_name, widget, message = None, None, None
             for key, value in kwargs.items():
-                if key == 'widget_name':
-                    widget_name = value
+                if key == 'widget':
+                    widget = value
+                    widget_name = widget.name()
                 elif key == 'message':
                     message = value
 
+            print(self.respondingExpandedWidgets)
+
             # Check if expanded widget exists
             if not widget_name or widget_name not in self.respondingExpandedWidgets \
-               or widget_name not in list(self.activeExpandedWidgetsNames):
+               or widget_name not in list(self.activeExpandedWidgetsNames) \
+               or not self.activeExpandedWidgets:
                 return False
 
-            # Deliver the message
-            self.activeExpandedWidgets[widget_name].receive_message(message)
-            return True
+            print(self.activeExpandedWidgets)
+            for key, value in self.activeCollapsedWidgets.items():
+                if value == widget:
+                    # Deliver the message
+                    self.activeExpandedWidgets[key].receive_message(message)
+                    return True
+
+            return False
         
         def keyPressEvent(self, e):
             # Check if we can display an expanded widget
@@ -231,7 +240,6 @@ class MirrorWidget():
 
         def eventFilter(self, object, event):
             if event.type() == QEvent.KeyPress:
-                print ("HERE")
                 return True
             return QWidget.eventFilter(self, obj, event)
 
