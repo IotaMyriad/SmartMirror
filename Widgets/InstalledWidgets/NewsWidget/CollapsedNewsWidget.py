@@ -1,7 +1,10 @@
 import random
 import sys
+
 import feedparser
+from time import sleep
 from newspaper import Article
+from PyQt5 import QtCore
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
@@ -25,31 +28,53 @@ from Widgets.CollapsedWidget import CollapsedWidget
 
 class CollapsedNewsWidget(CollapsedWidget):
 
-    Headlines = []
-    Articles = []
-
-    def __init__(self):
+    def __init__(self, msg_callback=None):
         super(CollapsedNewsWidget, self).__init__()
-        self.getHeadlinesAndArticles()
+
         self.initializeUI()
 
-    def getHeadlinesAndArticles(self):
-        newsUrl = "http://news.yahoo.com/rss/"
+        self.dataDownloader = DataDownloadThread()
+        self.dataDownloader.signal.connect(self.updateUI)
+        self.dataDownloader.start()
 
-        newsFeed = feedparser.parse(newsUrl)
-        newsStories = newsFeed['items']
-        
-        loopCounter = 0
-        articleCounter = 0
-        while loopCounter < 4:
-            newsStory = newsStories[articleCounter]
-            article = self.getArticle(newsStory['link'])
-            if article is not None:
-                self.Headlines.append(newsStory['title'])
-                self.Articles.append(article)
-                loopCounter = loopCounter + 1
-            articleCounter = articleCounter + 1
-        return
+        self.WidgetCommunicator = WidgetCommunicator(self, msg_callback, \
+            self.dataDownloader)
+        self.WidgetCommunicator.start()       
+
+    def initializeUI(self):
+        self.table = QTableWidget(self)
+        self.table.setGeometry(25, 30, 1000, self.height())
+        self.table.setColumnCount(1)
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setVisible(False)
+        self.table.setStyleSheet("border: 0px; font-size: 16pt;")
+
+        for row in range(4):
+            self.table.insertRow(row)
+            self.table.setColumnWidth(row, 1000)
+
+    def updateUI(self, headlinesAndArticles):
+        Headlines = headlinesAndArticles[0]
+        for row in range(4):
+            headline = Headlines[row]
+            item = QTableWidgetItem(headline)
+            item.setTextAlignment(Qt.AlignHCenter)
+            item.setForeground(Qt.white)
+            self.table.setItem(row, 0, item)
+        self.update()
+
+    @staticmethod
+    def name():
+        return "NewsWidget"
+
+class DataDownloadThread(QtCore.QThread):
+
+    signal = QtCore.pyqtSignal(object)
+
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+        self.newsUrl = "http://news.yahoo.com/rss/"
+        self.refreshRate = 300 #5 minutes
 
     def getArticle(self, url):
         try:
@@ -60,29 +85,38 @@ class CollapsedNewsWidget(CollapsedWidget):
         except:
             return None
 
-    def initializeUI(self):
+    def updateArticlesAndHeadlines(self):
+        self.headlines = []
+        self.articles = []
 
-        table = QTableWidget(self)
+        newsFeed = feedparser.parse(self.newsUrl)
+        newsStories = newsFeed['items']
 
-        table.setGeometry(25, 30, 1000, self.height())
+        loopCounter = 0
+        articleCounter = 0
+        while loopCounter < 4:
+            newsStory = newsStories[articleCounter]
+            article = self.getArticle(newsStory['link'])
+            if article is not None:
+                self.headlines.append(newsStory['title'])
+                self.articles.append(article)
+                loopCounter = loopCounter + 1
+            articleCounter = articleCounter + 1
 
-        table.setColumnCount(1)
-        table.verticalHeader().setVisible(False)
-        table.horizontalHeader().setVisible(False)
-        table.setStyleSheet("border: 0px; font-size: 16pt;")
+    def run(self):
+        while True:
+            self.updateArticlesAndHeadlines()
+            self.signal.emit([self.headlines, self.articles])
+            sleep(self.refreshRate)
 
-        for headline in self.Headlines:
-            rowPosition = table.rowCount()
-            table.insertRow(rowPosition)
-            item = QTableWidgetItem(headline)
-            item.setTextAlignment(Qt.AlignHCenter)
-            item.setForeground(Qt.white)
-            table.setItem(rowPosition,0, item)
-            table.setColumnWidth(rowPosition, 1000)
+class WidgetCommunicator(QtCore.QThread):
 
-    @staticmethod
-    def name():
-        return "NewsWidget"
+    def __init__(self, widget, msg_callback, message):
+        QtCore.QThread.__init__(self)
+        self.widget = widget
+        self.message = message
+        self.msg_callback = msg_callback
 
-if __name__ == '__main__':
-    main()
+    def run(self):
+        while not self.msg_callback(widget=self.widget, message=self.message):
+            pass

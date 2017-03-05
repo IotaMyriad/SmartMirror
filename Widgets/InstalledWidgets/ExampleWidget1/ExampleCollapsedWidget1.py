@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
-import threading
 
+from PyQt5 import QtCore
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 from Widgets.CollapsedWidget import CollapsedWidget
@@ -10,14 +11,13 @@ from Widgets.CollapsedWidget import CollapsedWidget
 
 class ExampleCollapsedWidget1(CollapsedWidget):
 
-    global callback 
-
     def __init__(self, msg_callback=None):
         super(ExampleCollapsedWidget1, self).__init__()
-        global callback 
-        callback = msg_callback
-        #self.startMessaging()
         self.initUI()
+
+        self.WidgetCommunicator = WidgetCommunicator(self, msg_callback, \
+            "ExampleWidget1 message")
+        self.WidgetCommunicator.start()  
 
     def initUI(self):
         self.layout = QVBoxLayout()
@@ -26,17 +26,23 @@ class ExampleCollapsedWidget1(CollapsedWidget):
         self.layout.addWidget(self.widget)
         self.setLayout(self.layout)
 
-    def sendToExpanded(self, msg_callback):
-        while True:
-            print("ExampleWidget1")
-            print(msg_callback(widget=self, message='hello'))
-            sleep(1)
-
-    def startMessaging(self):
-        thread = threading.Thread(target = self.sendToExpanded, args=[callback])
-        thread.daemon = True
-        thread.start()
-
     @staticmethod
     def name():
         return "ExampleWidget1"
+
+class WidgetCommunicator(QtCore.QThread):
+
+    def __init__(self, widget, msg_callback, message):
+        QtCore.QThread.__init__(self)
+        self.widget = widget
+        self.message = message
+        self.msg_callback = msg_callback
+
+    def run(self):
+        #send the first message
+        while not self.msg_callback(widget=self.widget, message=self.message):
+            pass
+
+        #continue sending messages
+        while self.msg_callback(widget=self.widget, message=self.message):
+            sleep(5)

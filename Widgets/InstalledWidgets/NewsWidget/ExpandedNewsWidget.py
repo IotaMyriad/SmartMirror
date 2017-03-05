@@ -1,7 +1,6 @@
 import random
 import sys
-import feedparser
-from newspaper import Article
+from time import sleep
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
@@ -33,71 +32,53 @@ from Widgets.ExpandedWidget import ExpandedWidget
 
 class ExpandedNewsWidget(ExpandedWidget):
 
-    Headlines = []
-    Articles = []
-    ArticleCounter = 0
-
     def __init__(self):
         super(ExpandedNewsWidget, self).__init__()
-        self.getHeadlinesAndArticles()
+
+        self.headlines = []
+        self.articles = []
+        self.articleCounter = 0
+
         self.initializeUI()
 
-    def getHeadlinesAndArticles(self):
-        newsUrl = "http://news.yahoo.com/rss/"
-
-        newsFeed = feedparser.parse(newsUrl)
-        newsStories = newsFeed['items']
-        
-        loopCounter = 0
-        articleCounter = 0
-        while loopCounter < 4:
-            newsStory = newsStories[articleCounter]
-            article = self.getArticle(newsStory['link'])
-            if article is not None:
-                self.Headlines.append(newsStory['title'])
-                self.Articles.append(article)
-                loopCounter = loopCounter + 1
-            articleCounter = articleCounter + 1
-        return
-
-    def getArticle(self, url):
-        try:
-            article = Article(url)
-            article.download()
-            article.parse()
-            return article
-        except:
-            return None
-
     def initializeUI(self):
-        vbox = QVBoxLayout(self)
+        self.vbox = QVBoxLayout(self)
 
         self.title = QLabel(self)
         self.title.setStyleSheet("font-size: 16pt; color: white")
         self.title.setFixedWidth(1085)
         self.title.setAlignment(Qt.AlignHCenter)
-        vbox.addWidget(self.title)
+        self.vbox.addWidget(self.title)
 
         self.text = QTextEdit(self)
         self.text.setTextColor(Qt.white)
         self.text.setGeometry(25, 0, 1050, 750)
         self.text.setReadOnly(True)
-        self.updateText()
 
-        vbox.addWidget(self.text)
+        self.vbox.addWidget(self.text)
 
-    def updateText(self):
-        self.title.setText(self.Headlines[self.ArticleCounter])
-        self.text.setPlainText(self.Articles[self.ArticleCounter].text)
+    def updateData(self, headlinesAndArticles):
+        self.headlines = headlinesAndArticles[0]
+        self.articles = headlinesAndArticles[1]
+        self.updateUI()
+
+    def updateUI(self):
+        self.title.setText(self.headlines[self.articleCounter])
+        self.text.setPlainText(self.articles[self.articleCounter].text)
+        self.update()
+
+    def receive_message(self, message):
+        self.dataThread = message
+        self.dataThread.signal.connect(self.updateData)
 
     def keyPressUsed(self, e) -> bool:
-        if e.key() == Qt.Key_D and self.ArticleCounter < 3:
-            self.ArticleCounter = self.ArticleCounter + 1
-            self.updateText()
+        if e.key() == Qt.Key_D and self.articleCounter < 3:
+            self.articleCounter = self.articleCounter + 1
+            self.updateUI()
             return True
-        elif e.key() == Qt.Key_A and self.ArticleCounter > 0:
-            self.ArticleCounter = self.ArticleCounter - 1
-            self.updateText()
+        elif e.key() == Qt.Key_A and self.articleCounter > 0:
+            self.articleCounter = self.articleCounter - 1
+            self.updateUI()
             return True
         elif e.key() == Qt.Key_S:
             currentValue = self.text.verticalScrollBar().value()
@@ -113,17 +94,3 @@ class ExpandedNewsWidget(ExpandedWidget):
     @staticmethod
     def name():
         return "NewsWidget"
-
-if __name__ == '__main__':
-    main()
-
-"""    def printArticle(self): 
-        print(self.Articles[0].text)
-        print("Summary: ")
-        
-        parser = PlaintextParser.from_string(self.Articles[0].text, Tokenizer("english"))
-        sumarizer = LexRankSummarizer()
-        summary = sumarizer(parser.document, 0.25)
-        for sentence in summary: 
-            print(sentence)
-"""

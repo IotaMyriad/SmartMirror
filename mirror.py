@@ -182,20 +182,20 @@ class MirrorWidget():
                 elif key == 'message':
                     message = value
 
-            print(self.respondingExpandedWidgets)
-
             # Check if expanded widget exists
             if not widget_name or widget_name not in self.respondingExpandedWidgets \
                or widget_name not in list(self.activeExpandedWidgetsNames) \
                or not self.activeExpandedWidgets:
                 return False
 
-            print(self.activeExpandedWidgets)
             for key, value in self.activeCollapsedWidgets.items():
                 if value == widget:
                     # Deliver the message
-                    self.activeExpandedWidgets[key].receive_message(message)
-                    return True
+                    try:
+                        self.activeExpandedWidgets[key].receive_message(message)
+                        return True
+                    except:
+                        pass
 
             return False
         
@@ -300,7 +300,6 @@ class MirrorWidget():
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
-
 def main():
     app = QApplication(sys.argv)
 
@@ -312,6 +311,7 @@ def main():
     #widget.showFullScreen()
 
     sys.exit(app.exec_())
+
 
 '''
 Imports all installed widgets so that they are visible to the main application.
