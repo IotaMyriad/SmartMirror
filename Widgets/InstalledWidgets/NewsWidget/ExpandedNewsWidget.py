@@ -54,7 +54,6 @@ class ExpandedNewsWidget(ExpandedWidget):
         self.text.setTextColor(Qt.white)
         self.text.setGeometry(25, 0, 1050, 750)
         self.text.setReadOnly(True)
-
         self.vbox.addWidget(self.text)
 
     def updateData(self, headlinesAndArticles):

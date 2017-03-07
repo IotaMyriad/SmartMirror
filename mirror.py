@@ -312,7 +312,6 @@ def main():
 
     sys.exit(app.exec_())
 
-
 '''
 Imports all installed widgets so that they are visible to the main application.
 '''
