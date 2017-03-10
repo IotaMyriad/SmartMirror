@@ -47,7 +47,7 @@ class CollapsedNewsWidget(CollapsedWidget):
         self.table.setColumnCount(1)
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setVisible(False)
-        self.table.setStyleSheet("border: 0px; font-size: 16pt;")
+        self.table.setStyleSheet("border: 0px; font-size: 16pt; color: white")
 
         for row in range(4):
             self.table.insertRow(row)
@@ -59,7 +59,6 @@ class CollapsedNewsWidget(CollapsedWidget):
             headline = Headlines[row]
             item = QTableWidgetItem(headline)
             item.setTextAlignment(Qt.AlignHCenter)
-            item.setForeground(Qt.white)
             self.table.setItem(row, 0, item)
         self.update()
 

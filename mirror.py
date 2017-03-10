@@ -226,6 +226,12 @@ class MirrorWidget():
             elif self.displayedExpandedWidgetOwner == 'top' and self.displayedExpandedWidget.keyPressUsed(e):
                 pass
 
+                # Check if the expanded widget can use the event
+            elif self.displayedExpandedWidgetOwner == 'left' and self.displayedExpandedWidget.keyPressUsed(e):
+                #pass the key press down to the collapsed widget
+                self.activeCollapsedWidgets['left'].keyPressUsed(e)
+                pass
+
             # Check if we can close the expanded widget
             else:
                 if (e.key() == Qt.Key_D and self.displayedExpandedWidgetOwner == 'right') \

@@ -15,6 +15,9 @@ class CollapsedWidget(QWidget, metaclass=CollapsedWidgetMeta):
     def __init__(self):
         super(CollapsedWidget, self).__init__()
 
+    def keyPressUsed(self, e) -> bool:
+        return False
+
     @staticmethod
     @abstractmethod
     def name(self) -> str:
