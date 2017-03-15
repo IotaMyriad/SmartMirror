@@ -19,7 +19,7 @@ class ExampleExpandedWidget1(ExpandedWidget):
         self.setLayout(self.layout)
 
     def receive_message(self, message):
-        print (message)
+        print(message)
 
     @staticmethod
     def name():
