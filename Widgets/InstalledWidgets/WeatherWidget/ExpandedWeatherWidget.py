@@ -122,6 +122,7 @@ class DailyWeather(QWidget):
         status = w.get_status()
 
         #self.lbl.setText(str(random.randint(0,9)))
+        self.lblp.setPixmap(QPixmap(os.getcwd() + "/weather_icons/" + w.get_weather_icon_name()))
         self.lbl2.setText("status: " + str(status) + "     ")
         self.lbl3.setText("daily min: " + str(int(round(temp_min))) + "°C     ")
         self.lbl4.setText("daily max: " + str(int(round(temp_max))) + "°C     ")
