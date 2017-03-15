@@ -22,6 +22,38 @@ from PyQt5.QtWidgets import *
 from Widgets.CollapsedWidget import CollapsedWidget
 from Widgets.ExpandedWidget import ExpandedWidget
 
+import speech_recognition as sr
+
+class speechRecognitionThread(QThread):
+    signal = pyqtSignal(str)
+
+    def __init__(self):
+        QThread.__init__(self)
+
+    def run(self):
+        r = sr.Recognizer()
+        m = sr.Microphone()
+        r.energy_threshold = 5500
+        r.non_speaking_duration = 0.2
+        r.pause_threshold = 0.3
+
+        while True:
+            with sr.Microphone() as source:
+                try:
+                    audio = r.listen(source, phrase_time_limit=2)
+                except sr.WaitTimeoutError as we:
+                    continue
+            BING_KEY = "11a5b6e3266f434ca89758db27105b2c" # Microsoft Bing Voice Recognition API keys 32-character lowercase hexadecimal strings
+            try:
+                self.signal.emit(r.recognize_bing(audio, key=BING_KEY))
+                #print("Microsoft Bing Voice Recognition thinks you said " + r.recognize_bing(audio, key=BING_KEY))
+            except sr.UnknownValueError:
+                pass
+                #print("Microsoft Bing Voice Recognition could not understand audio")
+            except sr.RequestError as e:
+                pass
+                #print("Could not request results from Microsoft Bing Voice Recognition service; {0}".format(e))
+                                
 
 '''
 Singleton class for the Mirror Widget. This is the main widget that displays
@@ -50,6 +82,10 @@ class MirrorWidget():
             self.initActiveCollapsedWidgets(collapsedWidgetConf)
             self.initActiveExpandedWidget()
             self.initUI(app, collapsedWidgetConf)
+
+            self.speechThread = speechRecognitionThread()
+            self.speechThread.signal.connect(self.speechEvent)
+            self.speechThread.start()
 
             #self.startFacialDetection()
 
@@ -198,6 +234,43 @@ class MirrorWidget():
                         pass
 
             return False
+
+        def speechEvent(self, event):
+            print (event)	
+            # Check if we can display an expanded widget		
+            if not self.displayedExpandedWidgetOwner:
+                if event == 'open one':
+                    self.displayedExpandedWidgetOwner = 'left'
+                elif event == 'open two':
+                    self.displayedExpandedWidgetOwner = 'top'
+                elif event == 'open three' or event == 'open free':
+                    self.displayedExpandedWidgetOwner = 'right'
+
+                # If the user has performed an accepted interaction and an expanded view exists for the widget
+                if self.displayedExpandedWidgetOwner and \
+                    self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]:
+                    # Remove the placeholder
+                    self.grid.removeWidget(self.displayedExpandedWidget)
+                    self.displayedExpandedWidget.setParent(None)
+                    self.displayedExpandedWidget = self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]
+                    self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+                # Reset displayedExpandedWidgetOwner if user performs illegal action or no expanded view exists
+                else:
+                    self.displayedExpandedWidgetOwner = None
+            # Check if we can close the expanded widget
+            else:
+                if ((event == "close three" or event=="close free") and self.displayedExpandedWidgetOwner == 'right') \
+                    or ((event == "close two" or event == "close to") and self.displayedExpandedWidgetOwner == 'top') \
+                    or (event == "close one" and self.displayedExpandedWidgetOwner == 'left'):
+                    self.grid.removeWidget(self.displayedExpandedWidget)
+                    self.displayedExpandedWidget.setParent(None)
+                    self.displayedExpandedWidget = self.placeholderExpandedWidget
+                    self.displayedExpandedWidgetOwner = None
+                    self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+
+               
+                   
+                    
         
         def keyPressEvent(self, e):
             # Check if we can display an expanded widget
