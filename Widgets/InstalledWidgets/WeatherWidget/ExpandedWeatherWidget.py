@@ -79,7 +79,7 @@ class DailyWeather(QWidget):
         self.lblp.setGeometry(0, 20, 120, 80)
         #use full ABSOLUTE path to the image, not relative
         #print (w.get_weather_icon_name())
-        self.lblp.setPixmap(QPixmap(os.getcwd() + "/weather_icons/" + w.get_weather_icon_name()))
+        self.lblp.setPixmap(QPixmap(os.getcwd() + "/Widgets/InstalledWidgets/WeatherWidget/weather_icons/" + w.get_weather_icon_name()))
 
         self.lbl2 = QLabel(self)
         self.lbl2.setStyleSheet("QLabel { color : white; }");
