@@ -2,7 +2,7 @@
 # pw: 12345678
 # API-key: 68a61abe6601c18b8288c0e133ccaafb
 
-import sys
+import os,sys
 import random
 import pyowm
 from PyQt5.QtCore import *
@@ -70,36 +70,44 @@ class Example(QWidget):
         #self.lbl.move(0, 200)
 
         temp = float(self.parse(str(temp), "'temp': ", ","))
+
+        self.lblp = QLabel(self)
+        self.lblp.setScaledContents(True);
+        self.lblp.setGeometry(0, 0, 120, 80)
+        #use full ABSOLUTE path to the image, not relative
+        #print (w.get_weather_icon_name())
+        self.lblp.setPixmap(QPixmap(os.getcwd() + "/Widgets/InstalledWidgets/WeatherWidget/weather_icons/" + w.get_weather_icon_name()))
+
         self.lbl1 = QLabel(self)
         self.lbl1.setStyleSheet("QLabel { color : white; }");
         self.lbl1.setText(str(int(round(temp))) + "°C     ")
         self.lbl1.setFont(temp_font);
-        self.lbl1.move(0, 0)
+        self.lbl1.move(0, 90)
 
         self.lbl2 = QLabel(self)
         self.lbl2.setStyleSheet("QLabel { color : white; }");
         self.lbl2.setText("status: " + str(status) + "     ")
-        self.lbl2.move(0, 60)
+        self.lbl2.move(0, 120)
 
         self.lbl3 = QLabel(self)
         self.lbl3.setStyleSheet("QLabel { color : white; }");
         self.lbl3.setText("daily min: " + str(int(round(temp_min))) + "°C     ")
-        self.lbl3.move(0, 80)
+        self.lbl3.move(0, 140)
 
         self.lbl4 = QLabel(self)
         self.lbl4.setStyleSheet("QLabel { color : white; }");
         self.lbl4.setText("daily max: " + str(int(round(temp_max))) + "°C     ")
-        self.lbl4.move(0, 100)
+        self.lbl4.move(0, 160)
 
         self.lbl5 = QLabel(self)
         self.lbl5.setStyleSheet("QLabel { color : white; }");
         self.lbl5.setText("wind: " + str(int(round(wind_spd))) + " km/h     ")
-        self.lbl5.move(0, 120)
+        self.lbl5.move(0, 180)
 
         self.lbl6 = QLabel(self)
         self.lbl6.setStyleSheet("QLabel { color : white; }");
         self.lbl6.setText("humidity: " + str(humidity) + "%     ")
-        self.lbl6.move(0, 140)
+        self.lbl6.move(0, 200)
 
         self.setWindowTitle('Weather') 
 
@@ -126,6 +134,7 @@ class Example(QWidget):
         temp = float(self.parse(str(w.get_temperature('celsius')), "'temp': ", ","))
 
         #self.lbl.setText(str(random.randint(0,9)))
+        self.lblp.setPixmap(QPixmap(os.getcwd() + "/weather_icons/" + w.get_weather_icon_name()))
         self.lbl1.setText(str(int(round(temp))) + "°C     ")
         self.lbl2.setText("status: " + str(status) + "     ")
         self.lbl3.setText("daily min: " + str(int(round(temp_min))) + "°C     ")
@@ -144,7 +153,7 @@ def main():
     vbox.addWidget(ex)
 
     mainWidget.setLayout(vbox)
-    mainWidget.setGeometry(0, 0, 130, 800)
+    mainWidget.setGeometry(0, 0, 160, 800)
     mainWidget.setStyleSheet("background-color:black;");
     mainWidget.show()
     
