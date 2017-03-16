@@ -24,10 +24,11 @@ from Widgets.ExpandedWidget import ExpandedWidget
 
 import speech_recognition as sr
 
+# COMMENT THIS STUFF OUT IF NOT RUNNING ON PI 
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+
 import time
-import cv2
 
 class speechRecognitionThread(QThread):
     signal = pyqtSignal(str)
@@ -92,6 +93,7 @@ class MirrorWidget():
             self.speechThread.signal.connect(self.speechEvent)
             self.speechThread.start()
 
+            # CHANGE THIS TO startFacialDetection() IF NOT RUNNING ON PI
             self.startPiFacialDetection()
 
             ''' TODO: This is just a workaround so that the main application
