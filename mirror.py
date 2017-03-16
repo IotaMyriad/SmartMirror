@@ -6,7 +6,7 @@ import importlib
 from inspect import signature
 from inspect import ismethod
 
-#import cv2
+import cv2
 #http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
 #used that to install opencv
 #I did not use virtualenvs, and instead changed a line when you cmake
@@ -23,6 +23,11 @@ from Widgets.CollapsedWidget import CollapsedWidget
 from Widgets.ExpandedWidget import ExpandedWidget
 
 import speech_recognition as sr
+
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import time
+import cv2
 
 class speechRecognitionThread(QThread):
     signal = pyqtSignal(str)
@@ -87,7 +92,7 @@ class MirrorWidget():
             self.speechThread.signal.connect(self.speechEvent)
             self.speechThread.start()
 
-            #self.startFacialDetection()
+            self.startPiFacialDetection()
 
             ''' TODO: This is just a workaround so that the main application
                       gets all the keyboard events. Need to figure out how to
@@ -326,6 +331,52 @@ class MirrorWidget():
             thread = threading.Thread(target = self.facialDetection)
             thread.daemon = True
             thread.start()
+
+        def startPiFacialDetection(self):
+            thread = threading.Thread(target = self.piFacialDetection)
+            thread.daemon = True
+            thread.start()
+       
+        def piFacialDetection(self):
+            #http://www.pyimagesearch.com/2015/03/30/accessing-the-raspberry-pi-camera-with-opencv-and-python/
+            faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+            camera = PiCamera()
+            camera.resolution = (640, 480)
+            camera.framerate = 16
+            rawCapture = PiRGBArray(camera, size=(640, 480))
+
+            faceTimeCounter = 5
+            widgetsShowing = False
+           
+            time.sleep(0.1)
+            for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+                image = frame.array
+                gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+                faces = faceCascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(30, 30),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+
+                if len(faces) == 0:
+                    if faceTimeCounter > 0:
+                        faceTimeCounter = faceTimeCounter - 1
+                else:
+                    if faceTimeCounter < 30:
+                        faceTimeCounter = faceTimeCounter + 1
+
+                print("faceTimeCounter: " + str(faceTimeCounter))
+                if faceTimeCounter > 0 and widgetsShowing == False:
+                    widgetsShowing = True
+                    self.showWidgets()
+                elif faceTimeCounter == 0 and widgetsShowing == True:
+                    widgetsShowing = False
+                    self.hideWidgets()
+                rawCapture.truncate(0)
+                sleep(1)
 
         def facialDetection(self):
             #https://realpython.com/blog/python/face-detection-in-python-using-a-webcam/
