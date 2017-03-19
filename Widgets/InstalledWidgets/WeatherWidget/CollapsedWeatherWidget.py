@@ -38,28 +38,27 @@ class CollapsedWeatherWidget(CollapsedWidget):
         self.vbox.addWidget(self.lblp)
 
         self.lbl1 = QLabel(self)
-        self.lbl1.setStyleSheet("QLabel { color : white; }")
-        self.lbl1.setFont(QFont("Helvetica",32))
+        self.lbl1.setStyleSheet("font-size: 60pt; color: white")
         self.vbox.addWidget(self.lbl1)
         
         self.lbl2 = QLabel(self)
-        self.lbl2.setStyleSheet("QLabel { color : white; }");
+        self.lbl2.setStyleSheet("font-size: 24pt; color: white")
         self.vbox.addWidget(self.lbl2)
         
         self.lbl3 = QLabel(self)
-        self.lbl3.setStyleSheet("QLabel { color : white; }");
+        self.lbl3.setStyleSheet("font-size: 24pt; color: white")
         self.vbox.addWidget(self.lbl3)
         
         self.lbl4 = QLabel(self)
-        self.lbl4.setStyleSheet("QLabel { color : white; }");
+        self.lbl4.setStyleSheet("font-size: 24pt; color: white")
         self.vbox.addWidget(self.lbl4)
         
         self.lbl5 = QLabel(self)
-        self.lbl5.setStyleSheet("QLabel { color : white; }");
+        self.lbl5.setStyleSheet("font-size: 24pt; color: white")
         self.vbox.addWidget(self.lbl5)
         
         self.lbl6 = QLabel(self)
-        self.lbl6.setStyleSheet("QLabel { color : white; }");
+        self.lbl6.setStyleSheet("font-size: 24pt; color: white")
         self.vbox.addWidget(self.lbl6)
         
         self.lblp.setAlignment(Qt.AlignRight)
@@ -80,7 +79,6 @@ class CollapsedWeatherWidget(CollapsedWidget):
         self.timer.setInterval(5000)
         self.timer.timeout.connect(self.Update)
         self.timer.start()
-        self.show()
     
     def Update(self):
         owm = pyowm.OWM(API_key)
@@ -97,7 +95,7 @@ class CollapsedWeatherWidget(CollapsedWidget):
         humidity = w.get_humidity()
         temp = float(self.parse(str(w.get_temperature('celsius')), "'temp': ", ","))
 
-        self.lblp.setPixmap(QPixmap(os.getcwd() + "/Widgets/InstalledWidgets/WeatherWidget/weather_icons/" + w.get_weather_icon_name()))
+        self.lblp.setPixmap(QPixmap(os.getcwd() + "/Widgets/InstalledWidgets/WeatherWidget/weather_icons/Collapsed/" + w.get_weather_icon_name()))
         self.lbl1.setText(str(int(round(temp))) + "°C")
         self.lbl2.setText("status: " + str(status) + "")
         self.lbl3.setText("daily min: " + str(int(round(temp_min))) + "°C")
