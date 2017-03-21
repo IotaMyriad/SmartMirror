@@ -91,11 +91,15 @@ class DataDownloadThread(QtCore.QThread):
         newsFeed = feedparser.parse(self.newsUrl)
         newsStories = newsFeed['items']
 
+        newsStories.sort(key = lambda c: c.published)
+        newsStories.reverse()
+
         loopCounter = 0
         articleCounter = 0
         while loopCounter < 4:
             newsStory = newsStories[articleCounter]
             article = self.getArticle(newsStory['link'])
+            print(newsStory['published'])
             if article is not None:
                 self.headlines.append(newsStory['title'])
                 self.articles.append(article)
