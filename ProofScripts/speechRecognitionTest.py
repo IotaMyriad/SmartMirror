@@ -17,7 +17,12 @@ r.energy_threshold = 500
 while True: 
     with sr.Microphone() as source:
         print("Say something!")
-        audio = r.listen(source)
+        try:
+            audio = r.listen(source)
+        except sr.WaitTimeoutError as we:
+            print("Hitting time out")
+            continue
+
         print ("Got it! Now to recognize it!")
 
 	# recognize speech using Microsoft Bing Voice Recognition
