@@ -17,7 +17,6 @@ from Widgets.CollapsedWidget import CollapsedWidget
 pip3 install --upgrade google-api-python-client
 """
 
-
 class CollapsedDateTimeWidget(CollapsedWidget):
 
     CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'

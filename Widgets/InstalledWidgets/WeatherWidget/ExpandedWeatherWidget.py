@@ -2,11 +2,9 @@
 # pw: 12345678
 # API-key: 68a61abe6601c18b8288c0e133ccaafb
 
-import os,sys
-import random
+import os
 import pyowm
 import datetime
-from time import strftime
 from datetime import datetime
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
