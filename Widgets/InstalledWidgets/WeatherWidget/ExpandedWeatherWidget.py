@@ -79,12 +79,12 @@ class DailyWeather(QWidget):
             if self.date == weather.get_reference_time('iso'):
                 w = weather
                 break
+        
         daily = w.get_temperature('celsius')
         temp_min = float(self.parse(str(daily), "'min': ", ","))
         temp_max = float(self.parse(str(daily), "'max': ", ","))
-        observation = owm.weather_at_place(place)
-        w = observation.get_weather()
         status = w.get_status()
+        print (w.get_weather_icon_name())        
 
         self.lblp.setPixmap(QPixmap(os.getcwd() + "/Widgets/InstalledWidgets/WeatherWidget/weather_icons/Expanded/" + w.get_weather_icon_name()))
         self.lbl2.setText("status: " + str(status) + "     ")
