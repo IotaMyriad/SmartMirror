@@ -25,10 +25,8 @@ from Widgets.ExpandedWidget import ExpandedWidget
 import speech_recognition as sr
 
 # COMMENT THIS STUFF OUT IF NOT RUNNING ON PI 
-from picamera.array import PiRGBArray
-from picamera import PiCamera
-
-import time
+#from picamera.array import PiRGBArray
+#from picamera import PiCamera
 
 class speechRecognitionThread(QThread):
     signal = pyqtSignal(str)
@@ -37,6 +35,12 @@ class speechRecognitionThread(QThread):
         QThread.__init__(self)
 
     def run(self):
+        """
+        citation for this function:
+        A. Zhang, "Uberi/speech_recognition", Github, 2017. [Online]. Available:
+        https://github.com/Uberi/speech_recognition/blob/master/examples/microphone_recognition.py.
+        [Accessed: 22-Mar-2017]
+        """
         r = sr.Recognizer()
         m = sr.Microphone()
         r.energy_threshold = 5500
@@ -239,7 +243,6 @@ class MirrorWidget():
                         return True
                     except:
                         pass
-
             return False
 
         def speechEvent(self, event):
@@ -275,10 +278,6 @@ class MirrorWidget():
                     self.displayedExpandedWidgetOwner = None
                     self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
 
-               
-                   
-                    
-        
         def keyPressEvent(self, e):
             # Check if we can display an expanded widget
             if not self.displayedExpandedWidgetOwner:
@@ -340,7 +339,13 @@ class MirrorWidget():
             thread.start()
        
         def piFacialDetection(self):
-            #http://www.pyimagesearch.com/2015/03/30/accessing-the-raspberry-pi-camera-with-opencv-and-python/
+            """
+            Citation for this function:
+            A. Rosebrock, "Accessing the Raspberry Pi Camera with OpenCV and Python", pyimagesearch, 2017. [Online]
+            Available:
+            http://www.pyimagesearch.com/2015/03/30/accessing-the-raspberry-pi-camera-with-opencv-and-python.
+            [Accessed: 22-Mar-2017].
+            """
             faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
             camera = PiCamera()
             camera.resolution = (640, 480)
@@ -381,8 +386,12 @@ class MirrorWidget():
                 sleep(1)
 
         def facialDetection(self):
-            #https://realpython.com/blog/python/face-detection-in-python-using-a-webcam/
-            #need to source code
+            """
+            Citation for this function:
+            S. Tiwari, "Face detection in Python using a webcam", Real Python, 2014. [Online]. Available:
+            https://realpython.com/blog/python/face-detection-using-a-webcam. [Accessed: 22-Mar-2017].
+            """
+
             faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
             video_capture = cv2.VideoCapture(0)
 

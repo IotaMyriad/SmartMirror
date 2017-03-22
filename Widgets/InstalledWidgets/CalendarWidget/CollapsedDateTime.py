@@ -135,6 +135,11 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         self.tasksTable.update()
 
     def get_credentials(self, type):
+        """
+        Citation for this function:
+        "Python Quickstart", Google Calendar API, 2017. [Online]. Available:
+        https://developers.google.com/google-apps/calendar/quickstart/python. [Accessed: 22-Mar-2017]
+        """
         current_dir = os.getcwd()
         credential_dir = os.path.join(current_dir, '.credentials')
         if not os.path.exists(credential_dir):
@@ -159,6 +164,11 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         return credentials
 
     def update_events(self):
+        """
+        Citation for this function:
+        "Python Quickstart", Google Calendar API, 2017. [Online]. Available:
+        https://developers.google.com/google-apps/calendar/quickstart/python. [Accessed: 22-Mar-2017]
+        """
         credentials = self.get_credentials("events")
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('calendar', 'v3', http=http)
@@ -167,6 +177,11 @@ class CollapsedDateTimeWidget(CollapsedWidget):
                                             singleEvents=True, orderBy='startTime').execute().get('items', [])
 
     def update_tasks(self):
+        """
+        Citation for this function:
+        "Python Quickstart", Google Tasks API, 2017. [Online]. Available:
+        https://developers.google.com/google-apps/tasks/quickstart/python. [Accessed: 22-Mar-2017]
+        """
         self.tasks = []
         credentials = self.get_credentials("tasks")
         http = credentials.authorize(httplib2.Http())
