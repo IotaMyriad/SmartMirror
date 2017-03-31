@@ -70,20 +70,20 @@ class ExpandedNewsWidget(ExpandedWidget):
         self.dataThread = message
         self.dataThread.signal.connect(self.updateData)
 
-    def keyPressUsed(self, e) -> bool:
-        if e.key() == Qt.Key_D and self.articleCounter < 3:
+    def keyPressUsed(self, direction) -> bool:
+        if direction == 'right' and self.articleCounter < 3:
             self.articleCounter = self.articleCounter + 1
             self.updateUI()
             return True
-        elif e.key() == Qt.Key_A and self.articleCounter > 0:
+        elif direction == 'left' and self.articleCounter > 0:
             self.articleCounter = self.articleCounter - 1
             self.updateUI()
             return True
-        elif e.key() == Qt.Key_S:
+        elif direction == 'down':
             currentValue = self.text.verticalScrollBar().value()
             self.text.verticalScrollBar().setValue(currentValue + self.text.verticalScrollBar().pageStep())
             return True    
-        elif e.key() == Qt.Key_W and self.text.verticalScrollBar().value() != 0:
+        elif direction == 'up' and self.text.verticalScrollBar().value() != 0:
             currentValue = self.text.verticalScrollBar().value()
             self.text.verticalScrollBar().setValue(currentValue - self.text.verticalScrollBar().pageStep())
             return True    

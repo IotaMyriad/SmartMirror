@@ -20,18 +20,18 @@ class ExpandedDateTimeWidget(ExpandedWidget):
         self.calendar.setVerticalHeaderFormat(0)
         self.calendar.setStyleSheet("font-size: 30pt")
 
-    def keyPressUsed(self, e) -> bool:
-        if e.key() == Qt.Key_S:
+    def keyPressUsed(self, direction) -> bool:
+        if direction == 'down':
             currentDate = self.calendar.selectedDate()
             newDate = currentDate.addDays(1)
             self.calendar.setSelectedDate(newDate)
             return True
-        elif e.key() == Qt.Key_W:
+        elif direction == 'up':
             currentDate = self.calendar.selectedDate()
             newDate = currentDate.addDays(-1)
             self.calendar.setSelectedDate(newDate)
             return True
-        elif e.key() == Qt.Key_D:
+        elif direction == 'right':
             return True
         return False
 

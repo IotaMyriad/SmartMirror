@@ -2,6 +2,7 @@
 import sys
 import json
 import os
+import numpy
 import importlib
 from inspect import signature
 from inspect import ismethod
@@ -42,7 +43,6 @@ class speechRecognitionThread(QThread):
         [Accessed: 22-Mar-2017]
         """
         r = sr.Recognizer()
-        m = sr.Microphone()
         r.energy_threshold = 5500
         r.non_speaking_duration = 0.2
         r.pause_threshold = 0.3
@@ -63,7 +63,159 @@ class speechRecognitionThread(QThread):
             except sr.RequestError as e:
                 pass
                 #print("Could not request results from Microsoft Bing Voice Recognition service; {0}".format(e))
-                                
+
+
+class cameraThread(QThread):
+    signal = pyqtSignal(object)
+
+    def __init__(self):
+        QThread.__init__(self)
+        self.last_user = None
+
+    def run(self):
+        """ 
+        citation for this function: 
+        N. Ingham, "Face Detection and Recognition in Python with OpenCV",  
+        Noahingham.com, 2017. [Online].  
+        Available: https://noahingham.com/blog/facerec-python.html.  
+        [Accessed: 23-Mar-2017]. 
+        """
+
+        size = 2
+        fn_haar = 'haarcascade_frontalface_default.xml'
+        fn_dir = 'att_faces'
+
+        multiplePeopleCounter = 0
+        infoShowing = True
+        faceTimeCounter = 5
+        widgetsShowing = True
+
+        # Part 1: Create fisherRecognizer
+        print('Training...')
+
+        # Create a list of images and a list of corresponding names
+        (images, lables, names, id) = ([], [], {}, 0)
+
+        # Get the folders containing the training data
+        for (subdirs, dirs, files) in os.walk(fn_dir):
+
+            # Loop through each folder named after the subject in the photos
+            for subdir in dirs:
+                names[id] = subdir
+                subjectpath = os.path.join(fn_dir, subdir)
+
+                # Loop through each photo in the folder
+                for filename in os.listdir(subjectpath):
+
+                    # Skip non-image formates
+                    f_name, f_extension = os.path.splitext(filename)
+                    if (f_extension.lower() not in
+                            ['.png', '.jpg', '.jpeg', '.gif', '.pgm']):
+                        print("Skipping " + filename + ", wrong file type")
+                        continue
+                    path = subjectpath + '/' + filename
+                    lable = id
+
+                    # Add to training data
+                    images.append(cv2.imread(path, 0))
+                    lables.append(int(lable))
+                id += 1
+        (im_width, im_height) = (112, 92)
+
+        # Create a Numpy array from the two lists above
+        (images, lables) = [numpy.array(lis) for lis in [images, lables]]
+
+        # OpenCV trains a model from the images
+        # NOTE FOR OpenCV2: remove '.face'
+        model = cv2.face.createFisherFaceRecognizer()
+        model.train(images, lables)
+        model.setThreshold(400)
+
+        # Part 2: Use fisherRecognizer on camera stream
+        haar_cascade = cv2.CascadeClassifier(fn_haar)
+        webcam = cv2.VideoCapture(0)
+        while True:
+
+            # Loop until the camera is working
+            rval = False
+            while (not rval):
+                # Put the image from the webcam into 'frame'
+                (rval, frame) = webcam.read()
+                if (not rval):
+                    print("Failed to open webcam. Trying again...")
+
+            # Flip the image (optional)
+            frame = cv2.flip(frame, 1, 0)
+
+            # Convert to grayscalel
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            # Resize to speed up detection (optinal, change size above)
+            mini = cv2.resize(gray, (int(gray.shape[1] / size), int(gray.shape[0] / size)))
+
+            # Detect faces
+            faces = haar_cascade.detectMultiScale(mini)
+            print('number of faces:' + str(len(faces)))
+
+            information_to_send = []
+
+            #sleep mode algorithm
+            if len(faces) == 0:
+                if faceTimeCounter > 0:
+                    faceTimeCounter = faceTimeCounter - 1
+            else:
+                if faceTimeCounter < 5:
+                    faceTimeCounter = faceTimeCounter + 1
+
+            print("faceTimeCounter: " + str(faceTimeCounter))
+            if faceTimeCounter > 0 and widgetsShowing == False:
+                widgetsShowing = True
+                information_to_send.append('show widgets')
+            elif faceTimeCounter == 0 and widgetsShowing == True:
+                widgetsShowing = False
+                information_to_send.append('hide widgets')
+                information_to_send.append('hide info')
+                self.last_user = None
+
+            #multiple people algorithm
+            if len(faces) == 0 or len(faces) == 1:
+                if multiplePeopleCounter > 0:
+                    multiplePeopleCounter = multiplePeopleCounter - 1
+            else:
+                if multiplePeopleCounter < 10:
+                    multiplePeopleCounter = multiplePeopleCounter + 1
+
+            print("multiplePeopleCounter: " + str(multiplePeopleCounter))
+            if multiplePeopleCounter > 5 and infoShowing == True:
+                infoShowing = False
+                information_to_send.append('hide info')
+                self.last_user = None
+            elif multiplePeopleCounter < 5 and infoShowing == False:
+                infoShowing = True
+
+            #try to predict the face
+            if len(faces) == 1 and infoShowing == True:
+                face_i = faces[0]
+
+                # Coordinates of face after scaling back by `size`
+                (x, y, w, h) = [v * size for v in face_i]
+                face = gray[y:y + h, x:x + w]
+                face_resize = cv2.resize(face, (im_width, im_height))
+
+                prediction = model.predict(face_resize)
+                person = names[prediction]
+                print(person)
+                if prediction != 0 and self.last_user != person:
+                    self.last_user = person
+                    information_to_send.append(person)
+
+            #send the information
+            if len(information_to_send) > 0:
+                print("information to send: " + str(information_to_send))
+                self.signal.emit(information_to_send)
+
+            #sleep
+            sleep(1)
 
 '''
 Singleton class for the Mirror Widget. This is the main widget that displays
@@ -97,8 +249,12 @@ class MirrorWidget():
             self.speechThread.signal.connect(self.speechEvent)
             self.speechThread.start()
 
+            self.cameraThread = cameraThread()
+            self.cameraThread.signal.connect(self.cameraEvent)
+            self.cameraThread.start()
+
             # CHANGE THIS TO startFacialDetection() IF NOT RUNNING ON PI
-            self.startPiFacialDetection()
+            #self.startPiFacialDetection()
 
             ''' TODO: This is just a workaround so that the main application
                       gets all the keyboard events. Need to figure out how to
@@ -245,52 +401,57 @@ class MirrorWidget():
                         pass
             return False
 
-        def speechEvent(self, event):
-            print (event)	
-            # Check if we can display an expanded widget		
-            if not self.displayedExpandedWidgetOwner:
-                if event == 'open one':
-                    self.displayedExpandedWidgetOwner = 'left'
-                elif event == 'open two':
-                    self.displayedExpandedWidgetOwner = 'top'
-                elif event == 'open three' or event == 'open free':
-                    self.displayedExpandedWidgetOwner = 'right'
+        def cameraEvent(self, information_array):
+            for information in information_array:
+                if information == 'show widgets':
+                    self.showWidgets()
+                elif information == 'hide widgets':
+                    self.hideWidgets()
+                elif information == 'phil' or information == 'louis':
+                    self.activeCollapsedWidgets['left'].user = information
+                    self.activeCollapsedWidgets['left'].keyPressUsed('right')
+                elif information == 'hide info':
+                    self.activeCollapsedWidgets['left'].user = None
+                    self.activeCollapsedWidgets['left'].keyPressUsed('right')
 
-                # If the user has performed an accepted interaction and an expanded view exists for the widget
-                if self.displayedExpandedWidgetOwner and \
-                    self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]:
-                    # Remove the placeholder
-                    self.grid.removeWidget(self.displayedExpandedWidget)
-                    self.displayedExpandedWidget.setParent(None)
-                    self.displayedExpandedWidget = self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]
-                    self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
-                # Reset displayedExpandedWidgetOwner if user performs illegal action or no expanded view exists
-                else:
-                    self.displayedExpandedWidgetOwner = None
-            # Check if we can close the expanded widget
-            else:
-                if ((event == "close three" or event=="close free") and self.displayedExpandedWidgetOwner == 'right') \
-                    or ((event == "close two" or event == "close to") and self.displayedExpandedWidgetOwner == 'top') \
-                    or (event == "close one" and self.displayedExpandedWidgetOwner == 'left'):
-                    self.grid.removeWidget(self.displayedExpandedWidget)
-                    self.displayedExpandedWidget.setParent(None)
-                    self.displayedExpandedWidget = self.placeholderExpandedWidget
-                    self.displayedExpandedWidgetOwner = None
-                    self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
+        def speechEvent(self, speech):
+            print (speech)
+            split_speech = speech.split(" ")
+            if len(split_speech) == 2:
+                character = list(split_speech[1])[0]
+
+                if character == 'r':
+                    self.user_interaction('right')
+                elif character == 'd':
+                    self.user_interaction('down')
+                elif character == 'l':
+                    self.user_interaction('left')
+                elif character == 'u':
+                    self.user_interaction('up')
 
         def keyPressEvent(self, e):
+            if e.key() == Qt.Key_D:
+                self.user_interaction('right')
+            elif e.key() == Qt.Key_S:
+                self.user_interaction('down')
+            elif e.key() == Qt.Key_A:
+                self.user_interaction('left')
+            elif e.key() == Qt.Key_W:
+                self.user_interaction('up')
+
+        def user_interaction(self, direction):
             # Check if we can display an expanded widget
             if not self.displayedExpandedWidgetOwner:
-                if e.key() == Qt.Key_D:
+                if direction == 'right':
                     self.displayedExpandedWidgetOwner = 'left'
-                elif e.key() == Qt.Key_S:
+                elif direction == 'down':
                     self.displayedExpandedWidgetOwner = 'top'
-                elif e.key() == Qt.Key_A:
+                elif direction == 'left':
                     self.displayedExpandedWidgetOwner = 'right'
 
                 # If the user has performed an accepted interaction and an expanded view exists for the widget
                 if self.displayedExpandedWidgetOwner and \
-                    self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]:
+                        self.activeExpandedWidgets[self.displayedExpandedWidgetOwner]:
                     # Remove the placeholder
                     self.grid.removeWidget(self.displayedExpandedWidget)
                     self.displayedExpandedWidget.setParent(None)
@@ -302,31 +463,25 @@ class MirrorWidget():
                     self.displayedExpandedWidgetOwner = None
 
             # Check if the expanded widget can use the event
-            elif self.displayedExpandedWidgetOwner == 'top' and self.displayedExpandedWidget.keyPressUsed(e):
+            elif self.displayedExpandedWidgetOwner == 'top' and self.displayedExpandedWidget.keyPressUsed(direction):
                 pass
 
                 # Check if the expanded widget can use the event
-            elif self.displayedExpandedWidgetOwner == 'left' and self.displayedExpandedWidget.keyPressUsed(e):
-                #pass the key press down to the collapsed widget
-                self.activeCollapsedWidgets['left'].keyPressUsed(e)
+            elif self.displayedExpandedWidgetOwner == 'left' and self.displayedExpandedWidget.keyPressUsed(direction):
+                # pass the key press down to the collapsed widget
+                self.activeCollapsedWidgets['left'].keyPressUsed(direction)
                 pass
 
             # Check if we can close the expanded widget
             else:
-                if (e.key() == Qt.Key_D and self.displayedExpandedWidgetOwner == 'right') \
-                    or (e.key() == Qt.Key_W and self.displayedExpandedWidgetOwner == 'top') \
-                    or (e.key() == Qt.Key_A and self.displayedExpandedWidgetOwner == 'left'):
+                if (direction == 'right' and self.displayedExpandedWidgetOwner == 'right') \
+                        or (direction == 'up' and self.displayedExpandedWidgetOwner == 'top') \
+                        or (direction == 'left' and self.displayedExpandedWidgetOwner == 'left'):
                     self.grid.removeWidget(self.displayedExpandedWidget)
                     self.displayedExpandedWidget.setParent(None)
                     self.displayedExpandedWidget = self.placeholderExpandedWidget
                     self.displayedExpandedWidgetOwner = None
                     self.grid.addWidget(self.displayedExpandedWidget, 30, 30, 100, 90)
-
-
-        def eventFilter(self, object, event):
-            if event.type() == QEvent.KeyPress:
-                return True
-            return QWidget.eventFilter(self, obj, event)
 
         def startFacialDetection(self):
             thread = threading.Thread(target = self.facialDetection)

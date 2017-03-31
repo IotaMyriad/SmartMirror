@@ -43,6 +43,7 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         self.calendar_date = datetime.datetime.now()
         self.events = []
         self.tasks = []
+        self.user = None
 
         self.update_events()
         self.update_tasks()
@@ -91,7 +92,9 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         self.time_timer.start()
 
         self.events_timer.setInterval(300000)
+        self.events_timer.timeout.connect(self.update_events)
         self.events_timer.timeout.connect(self.update_displayed_events)
+        self.events_timer.timeout.connect(self.update_tasks)
         self.events_timer.timeout.connect(self.update_displayed_tasks)
         self.events_timer.start()
 
@@ -139,16 +142,17 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         "Python Quickstart", Google Calendar API, 2017. [Online]. Available:
         https://developers.google.com/google-apps/calendar/quickstart/python. [Accessed: 22-Mar-2017]
         """
+
         current_dir = os.getcwd()
         credential_dir = os.path.join(current_dir, '.credentials')
         if not os.path.exists(credential_dir):
             os.makedirs(credential_dir)
         if type == "events":
             credential_path = os.path.join(credential_dir,
-                                           'events-credidentials.json')
+                                           self.user + '-events-credidentials.json')
         elif type == "tasks":
             credential_path = os.path.join(credential_dir,
-                                           'tasks-credidentials.json')
+                                           self.user + '-tasks-credidentials.json')
 
         store = Storage(credential_path)
         credentials = store.get()
@@ -168,6 +172,10 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         "Python Quickstart", Google Calendar API, 2017. [Online]. Available:
         https://developers.google.com/google-apps/calendar/quickstart/python. [Accessed: 22-Mar-2017]
         """
+        self.events = []
+        if self.user == None:
+            return
+
         credentials = self.get_credentials("events")
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('calendar', 'v3', http=http)
@@ -182,6 +190,9 @@ class CollapsedDateTimeWidget(CollapsedWidget):
         https://developers.google.com/google-apps/tasks/quickstart/python. [Accessed: 22-Mar-2017]
         """
         self.tasks = []
+        if self.user == None:
+            return
+
         credentials = self.get_credentials("tasks")
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('tasks', 'v1', http=http)
@@ -193,18 +204,18 @@ class CollapsedDateTimeWidget(CollapsedWidget):
             for task in tasks['items']:
                 self.tasks.append(task)
 
-    def keyPressUsed(self, e) -> bool:
-        if e.key() == Qt.Key_S:
+    def keyPressUsed(self, direction) -> bool:
+        if direction == 'down':
             self.calendar_date = self.calendar_date + timedelta(1)
             self.update_displayed_events()
             self.update_displayed_tasks()
             return True
-        elif e.key() == Qt.Key_W:
+        elif direction == 'up':
             self.calendar_date = self.calendar_date + timedelta(-1)
             self.update_displayed_events()
             self.update_displayed_tasks()
             return True
-        elif e.key() == Qt.Key_D:
+        elif direction == 'right':
             self.update_events()
             self.update_displayed_events()
             self.update_tasks()
