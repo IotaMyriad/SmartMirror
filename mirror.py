@@ -26,8 +26,8 @@ from Widgets.ExpandedWidget import ExpandedWidget
 import speech_recognition as sr
 
 # COMMENT THIS STUFF OUT IF NOT RUNNING ON PI 
-#from picamera.array import PiRGBArray
-#from picamera import PiCamera
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 
 class speechRecognitionThread(QThread):
     signal = pyqtSignal(str)
@@ -133,16 +133,26 @@ class cameraThread(QThread):
 
         # Part 2: Use fisherRecognizer on camera stream
         haar_cascade = cv2.CascadeClassifier(fn_haar)
-        webcam = cv2.VideoCapture(0)
-        while True:
+        #webcam = cv2.VideoCapture(0)
+
+        camera = PiCamera()
+        camera.resolution = (640, 480)
+        camera.framerate = 16
+        rawCapture = PiRGBArray(camera, size=(640, 480))
+
+        for input_frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):        
+        #while True:
 
             # Loop until the camera is working
+            '''
             rval = False
             while (not rval):
                 # Put the image from the webcam into 'frame'
                 (rval, frame) = webcam.read()
                 if (not rval):
                     print("Failed to open webcam. Trying again...")
+            '''
+            frame = input_frame.array
 
             # Flip the image (optional)
             frame = cv2.flip(frame, 1, 0)
@@ -203,17 +213,19 @@ class cameraThread(QThread):
                 face_resize = cv2.resize(face, (im_width, im_height))
 
                 prediction = model.predict(face_resize)
-                person = names[prediction]
-                print(person)
-                if prediction != 0 and self.last_user != person:
-                    self.last_user = person
-                    information_to_send.append(person)
+                if prediction[0] >= 0 and prediction[0] < len(names):
+                    person = names[prediction]
+                    print(person)
+                    if self.last_user != person:
+                        self.last_user = person
+                        information_to_send.append(person)
 
             #send the information
             if len(information_to_send) > 0:
                 print("information to send: " + str(information_to_send))
                 self.signal.emit(information_to_send)
-
+            
+            rawCapture.truncate(0)
             #sleep
             sleep(1)
 
